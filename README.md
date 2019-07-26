@@ -1,0 +1,2 @@
+# eel_plotly
+Python用GUIソフトeelとJS用グラフ描画ソフトPlotlyを組み合わせたデータ可視化ツール
