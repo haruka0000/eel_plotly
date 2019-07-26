@@ -1,0 +1,117 @@
+<html>
+<head>
+    <script src="js/plotly-latest.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Eel</title>
+</head>
+<body>
+    
+    <div id="plot-area">
+        <!-- ここにグラフが描かれる（下のJavaScriptから） -->
+    </div>
+    
+    <!-- 要変更 -->
+    <!-- インタラクティブ操作用 -->
+    X軸：<input type="text" id="col-xaxis" value="ram"/><br/>
+    Y軸：<input type="text" id="col-yaxis" value="battery_power"/>
+    <button type="button" onclick="button_clicked()">SUBMIT</button>
+
+    <div style="padding: 10px;">
+        <h1>カラム名一覧</h1>
+        <h4 id="columns-area">
+            <!-- 選択できるカラム名の表示 -->
+        </h4>
+    </div>
+
+    <!-- Python用 -->
+    <script type="text/javascript" src="/eel.js"></script>
+    
+
+    <!-- グラフ描画用 -->
+    <script type="text/javascript">
+        // 要変更
+        var val_xaxis="ram", val_yaxis="battery_power";
+        // main.py のメソッドの戻り値を受け取る処理
+        async function run() {
+            // 要変更
+            // データ取得
+            let val_01 = await eel.py_get_data("price_range")();
+            let val_02 = await eel.py_get_data(val_xaxis)(); // テキストボックスの値から取得
+            let val_03 = await eel.py_get_data(val_yaxis)(); // テキストボックスの値から取得
+            let val_04 = await eel.py_get_data("n_cores")();
+            let columns = await eel.py_get_columns()();
+
+            
+            for(i = 0; i < val_01.length; i += 1){
+                // 円のサイズとして適正な値に補正
+                val_04[i] = val_01[i] * 10;
+            }
+
+            // 描画
+            plot(val_01, val_02, val_03, val_04);
+
+            // カラム名表示
+            var columns_area = document.getElementById('columns-area');
+            columns_area.innerHTML = columns.join("<br>");
+        }
+        run();
+
+
+        // SUBMITされたとき
+        function button_clicked(){
+            // 軸変更
+            val_xaxis = document.getElementById('col-xaxis').value; // HTML要素オブジェクトを取得
+            val_yaxis = document.getElementById('col-yaxis').value; // HTML要素オブジェクトを取得
+            // 再描画
+            run();
+        }
+
+
+        // 描画設定
+        function plot(val_01, val_02, val_03, val_04) {
+            // 表示する１つ目のデータの詳細
+            var trace1 = {
+                x: val_02,
+                y: val_03,
+                mode: 'markers', // "line" や "markers+line+text"など
+                type: 'scatter',
+                name: 'Data-sample',
+                marker:{
+                    size: val_04,
+                    color: val_01, 
+                }
+            };
+
+            // 表示するデータ(trace1)を格納（複数可　例．[trace1, trace2]）
+            var data = [trace1];
+
+            // レイアウトの設定
+            var layout = {
+                title: "Basic Point Cloud",
+                // x軸設定
+                xaxis: {
+                    title: val_xaxis,
+                    type: "linear",
+                    range: [-2.501411175139456,
+                            43.340777299865266],
+                    autorange: true
+                },
+                // y軸設定
+                yaxis: {
+                    title: val_yaxis,
+                    type: "linear",
+                    range: [4,6],
+                    autorange: true
+                },
+                // height: 598,
+                // width: 1080,
+                autosize: true,
+                showlegend: false
+            }
+
+            // plot-area に描画
+            Plotly.newPlot('plot-area', data, layout);
+        }
+    </script>
+</body>
+</html>
